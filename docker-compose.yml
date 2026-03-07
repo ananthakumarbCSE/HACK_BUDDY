@@ -1,0 +1,37 @@
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: hackbuddy
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: hackbuddydb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      DATABASE_URL: postgresql://hackbuddy:password123@postgres:5432/hackbuddydb
+      SECRET_KEY: myverysecretkey123
+      TINYFISH_API_KEY: ${TINYFISH_API_KEY}
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+
+  frontend:
+    build:
+      context: ./frontend
+    environment:
+      VITE_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
