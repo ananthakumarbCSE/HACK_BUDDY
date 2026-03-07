@@ -7,7 +7,12 @@ export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [mobile, setMobile] = useState('');
+  const [gender, setGender] = useState('');
+  const [organization, setOrganization] = useState('');
+  const [location, setLocation] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -35,7 +40,16 @@ export default function Login() {
         localStorage.setItem('token', res.data.access_token);
         navigate('/dashboard');
       } else {
-        await api.post('/auth/register', { email, password, name });
+        await api.post('/auth/register', {
+          email,
+          password,
+          first_name: firstName,
+          last_name: lastName,
+          mobile,
+          gender,
+          organization,
+          location
+        });
         // Auto login after register
         const formData = new FormData();
         formData.append('username', email);
@@ -64,9 +78,36 @@ export default function Login() {
 
         <form onSubmit={handleSubmit}>
           {!isLogin && (
-            <div className="input-group">
-              <label>Full Name</label>
-              <input type="text" className="input-field" value={name} onChange={e => setName(e.target.value)} required />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', width: '100%' }}>
+              <div className="input-group">
+                <label>First Name</label>
+                <input type="text" className="input-field" value={firstName} onChange={e => setFirstName(e.target.value)} required />
+              </div>
+              <div className="input-group">
+                <label>Last Name</label>
+                <input type="text" className="input-field" value={lastName} onChange={e => setLastName(e.target.value)} required />
+              </div>
+              <div className="input-group">
+                <label>Mobile</label>
+                <input type="tel" className="input-field" value={mobile} onChange={e => setMobile(e.target.value)} />
+              </div>
+              <div className="input-group">
+                <label>Gender</label>
+                <select className="input-field" value={gender} onChange={e => setGender(e.target.value)}>
+                  <option value="">Select</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div className="input-group">
+                <label>Organization / College</label>
+                <input type="text" className="input-field" value={organization} onChange={e => setOrganization(e.target.value)} />
+              </div>
+              <div className="input-group">
+                <label>Location</label>
+                <input type="text" className="input-field" value={location} onChange={e => setLocation(e.target.value)} />
+              </div>
             </div>
           )}
           <div className="input-group">

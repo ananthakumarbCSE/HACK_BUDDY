@@ -6,7 +6,12 @@ from .models import RegistrationStatus
 # User Schemas
 class UserBase(BaseModel):
     email: EmailStr
-    name: str
+    first_name: str
+    last_name: str
+    mobile: Optional[str] = None
+    gender: Optional[str] = None
+    organization: Optional[str] = None
+    location: Optional[str] = None
 
 class UserCreate(UserBase):
     password: str = Field(..., min_length=6, max_length=72)
@@ -15,7 +20,7 @@ class UserResponse(UserBase):
     id: int
     created_at: datetime
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class Token(BaseModel):
     access_token: str
@@ -26,13 +31,32 @@ class TokenData(BaseModel):
 
 # Team Schemas
 class TeamMemberBase(BaseModel):
-    user_id: int
-    role: str
+    first_name: str
+    last_name: str
+    email: EmailStr
+    mobile: Optional[str] = None
+    gender: Optional[str] = None
+    organization: Optional[str] = None
+    location: Optional[str] = None
+    role: str = "Member"
+
+class TeamMemberCreate(TeamMemberBase):
+    pass
+
+class TeamMemberUpdate(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    mobile: Optional[str] = None
+    gender: Optional[str] = None
+    organization: Optional[str] = None
+    location: Optional[str] = None
+    role: Optional[str] = None
 
 class TeamMemberResponse(TeamMemberBase):
     id: int
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class TeamBase(BaseModel):
     name: str
@@ -46,7 +70,7 @@ class TeamResponse(TeamBase):
     created_at: datetime
     members: List[TeamMemberResponse] = []
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Hackathon Schemas
 class HackathonBase(BaseModel):
@@ -60,6 +84,7 @@ class HackathonBase(BaseModel):
     end_date: Optional[datetime] = None
     registration_link: str
     description: Optional[str] = None
+    platform: Optional[str] = None
 
 class HackathonCreate(HackathonBase):
     pass
@@ -68,7 +93,10 @@ class HackathonResponse(HackathonBase):
     id: int
     created_at: datetime
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+class SearchHackathonRequest(BaseModel):
+    query: str
 
 # Registration Schemas
 class RegistrationBase(BaseModel):
@@ -85,4 +113,4 @@ class RegistrationResponse(RegistrationBase):
     tinyfish_run_id: Optional[str] = None
     logs: Optional[str] = None
     class Config:
-        orm_mode = True
+        from_attributes = True

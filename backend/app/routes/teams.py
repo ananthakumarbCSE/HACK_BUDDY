@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from .. import schemas, models, auth
 from ..database import get_db
-from ..team_service import create_team, get_user_teams, add_member, get_team_details
+from ..team_service import create_team, get_user_teams, get_team_details
 
 router = APIRouter(prefix="/teams", tags=["teams"])
 
@@ -25,13 +25,26 @@ def read_team(team_id: int, db: Session = Depends(get_db), current_user: models.
         raise HTTPException(status_code=404, detail="Team not found")
     return team
 
-class AddMemberRequest(schemas.BaseModel):
-    email: str
-    role: str = "Member"
-
 @router.post("/{team_id}/members", response_model=schemas.TeamMemberResponse)
-def add_team_member(team_id: int, req: AddMemberRequest, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
+def add_team_member(team_id: int, req: schemas.TeamMemberCreate, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
     try:
-        return add_member(db, team_id, current_user.id, req.email, req.role)
+        from ..team_service import add_member_manual
+        return add_member_manual(db, team_id, current_user.id, req)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.put("/members/{member_id}", response_model=schemas.TeamMemberResponse)
+def update_team_member(member_id: int, req: schemas.TeamMemberUpdate, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
+    try:
+        from ..team_service import edit_member_manual
+        return edit_member_manual(db, member_id, current_user.id, req)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.delete("/members/{member_id}")
+def delete_team_member(member_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
+    try:
+        from ..team_service import delete_member_manual
+        return delete_member_manual(db, member_id, current_user.id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

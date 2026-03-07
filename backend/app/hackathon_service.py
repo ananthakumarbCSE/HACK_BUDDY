@@ -28,7 +28,8 @@ def search_and_store_hackathons(db: Session, platform_url: str, goal: str):
                 location=r.get("location"),
                 prize_pool=r.get("prize_pool"),
                 registration_link=link,
-                description=r.get("description", "")
+                description=r.get("description", ""),
+                platform=r.get("platform", "Unknown")
             )
             db.add(new_h)
             saved_hackathons.append(new_h)
@@ -67,14 +68,39 @@ def register_team_for_hackathon(db: Session, reg_data: RegistrationCreate):
     db.refresh(new_reg)
     
     # Trigger TinyFish Registration (ideally async with Celery/BackgroundTasks)
-    # Constructing goal for TinyFish
+    # Constructing detailed agent goal with full team data
+    members_data = ""
+    for idx, m in enumerate(team.members):
+        members_data += f"\nMember {idx + 1}:\n"
+        members_data += f"- Name: {m.first_name} {m.last_name}\n"
+        members_data += f"- Email: {m.email}\n"
+        members_data += f"- Mobile: {m.mobile}\n"
+        members_data += f"- Gender: {m.gender}\n"
+        members_data += f"- Organization: {m.organization}\n"
+        members_data += f"- Location: {m.location}\n"
+        members_data += f"- Role: {m.role}\n"
+
     goal = f"""
-    Register for the hackathon at {hackathon.registration_link}.
-    Leader name: {team.leader.name}.
-    Leader Email: {team.leader.email}.
-    Team Name: {team.name}.
-    Team Members: {[m.user.name for m in team.members]}.
-    Submit the form and return confirmation.
+    Register this team for the hackathon at {hackathon.registration_link}.
+    
+    Team Name: {team.name}
+    
+    Team Leader Details:
+    Name: {team.leader.first_name} {team.leader.last_name}
+    Email: {team.leader.email}
+    Mobile: {team.leader.mobile}
+    Gender: {team.leader.gender}
+    Organization: {team.leader.organization}
+    Location: {team.leader.location}
+
+    Team Members:
+    {members_data}
+    
+    Steps:
+    1. Navigate to the registration form.
+    2. Fill all required fields for Team Leader and Team Members automatically.
+    3. Detect and toggle checkboxes, dropdowns, radio agreements, and team size selectors appropriately based on member profiles.
+    4. Submit the registration and return success trace.
     """
     
     tf_result = tinyfish_service.register_team(url=hackathon.registration_link, instructions=goal)

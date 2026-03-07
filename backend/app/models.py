@@ -10,11 +10,15 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
-    name = Column(String, nullable=False)
+    first_name = Column(String, nullable=False)
+    last_name = Column(String, nullable=False)
+    mobile = Column(String, nullable=True)
+    gender = Column(String, nullable=True)
+    organization = Column(String, nullable=True)
+    location = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     teams_led = relationship("Team", back_populates="leader")
-    memberships = relationship("TeamMember", back_populates="user")
 
 class Team(Base):
     __tablename__ = "teams"
@@ -33,11 +37,17 @@ class TeamMember(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     team_id = Column(Integer, ForeignKey("teams.id"))
-    user_id = Column(Integer, ForeignKey("users.id"))
+    first_name = Column(String, nullable=False)
+    last_name = Column(String, nullable=False)
+    email = Column(String, nullable=False)
+    mobile = Column(String, nullable=True)
+    gender = Column(String, nullable=True)
+    organization = Column(String, nullable=True)
+    location = Column(String, nullable=True)
     role = Column(String, default="Member")
+    created_at = Column(DateTime, default=datetime.utcnow)
 
     team = relationship("Team", back_populates="members")
-    user = relationship("User", back_populates="memberships")
 
 class Hackathon(Base):
     __tablename__ = "hackathons"
@@ -53,6 +63,7 @@ class Hackathon(Base):
     end_date = Column(DateTime)
     registration_link = Column(String, nullable=False)
     description = Column(Text)
+    platform = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     registrations = relationship("Registration", back_populates="hackathon")

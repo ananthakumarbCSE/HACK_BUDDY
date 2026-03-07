@@ -7,26 +7,45 @@ from ..hackathon_service import get_hackathons, search_and_store_hackathons, reg
 
 router = APIRouter(prefix="/hackathons", tags=["hackathons"])
 
-class SearchHackathonRequest(schemas.BaseModel):
-    url: str
-    goal: str
+PLATFORMS = [
+    "https://devpost.com/hackathons",
+    "https://www.hackerearth.com/challenges/",
+    "https://unstop.com/hackathons"
+]
 
 @router.get("/", response_model=List[schemas.HackathonResponse])
 def read_hackathons(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return get_hackathons(db, skip=skip, limit=limit)
 
 @router.post("/search", response_model=List[schemas.HackathonResponse])
-def trigger_hackathon_search(req: SearchHackathonRequest, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
+def trigger_hackathon_search(req: schemas.SearchHackathonRequest, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
     try:
-        hacks = search_and_store_hackathons(db, req.url, req.goal)
-        if not hacks:
+        results = []
+        goal = f"""Find hackathons matching this request:
+
+{req.query}
+
+Only return hackathons that match the criteria.
+
+Extract: name, domain, location, prize pool, deadline, registration link, platform.
+Return a JSON array."""
+
+        for url in PLATFORMS:
+            try:
+                hacks = search_and_store_hackathons(db, url, goal)
+                if hacks:
+                    results.extend(hacks)
+            except Exception as e:
+                print(f"Failed to scan {url}: {e}")
+
+        if not results:
             raise HTTPException(status_code=500, detail={"error": "Failed to extract hackathons or no new hackathons were found."})
-        return hacks
+        return results
     except HTTPException:
         raise
     except Exception as e:
         # Prevent 500 crash traces
-        raise HTTPException(status_code=500, detail={"error": f"TinyFish search failed: {str(e)}"})
+        raise HTTPException(status_code=500, detail={"error": f"TinyFish search failed totally: {str(e)}"})
 
 @router.post("/register", response_model=schemas.RegistrationResponse)
 def register_for_hackathon(

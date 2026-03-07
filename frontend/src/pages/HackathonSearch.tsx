@@ -12,8 +12,7 @@ export interface Team {
 export default function HackathonSearch() {
   const [hackathons, setHackathons] = useState<Hackathon[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
-  const [url, setUrl] = useState('https://devpost.com/hackathons');
-  const [goal, setGoal] = useState('Find AI hackathons with open registration. Extract name, domain, typed, location, prize pool, deadline, and registration link.');
+  const [query, setQuery] = useState('AI hackathons with prize pool above $3000');
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
 
@@ -40,7 +39,7 @@ export default function HackathonSearch() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await api.post('/hackathons/search', { url, goal });
+      const res = await api.post('/hackathons/search', { query });
       if (res.data.length > 0) {
         setHackathons(prev => {
           const newHacks = [...prev];
@@ -78,19 +77,22 @@ export default function HackathonSearch() {
     <div className="animate-fade-in">
       <div className="glass-panel" style={{ padding: '2rem', marginBottom: '2rem' }}>
         <h2 className="flex items-center gap-2 mb-4"><Search /> AI Web Agent Search</h2>
-        <p className="mb-4" style={{ color: 'var(--text-muted)' }}>Use TinyFish to scrape hackathon platforms.</p>
+        <p className="mb-4" style={{ color: 'var(--text-muted)' }}>Use TinyFish to autonomously scan multiple hackathon platforms for the latest opportunities.</p>
         
         <form onSubmit={handleSearch} className="flex-col gap-4">
-          <div className="input-group">
-            <label>Platform URL</label>
-            <input type="url" className="input-field" value={url} onChange={e => setUrl(e.target.value)} required />
-          </div>
-          <div className="input-group">
-            <label>Extraction Goal</label>
-            <textarea className="input-field" rows={3} value={goal} onChange={e => setGoal(e.target.value)} required />
+          <div className="input-group mb-4">
+            <label>Describe Your Ideal Hackathon</label>
+            <input 
+              type="text" 
+              className="input-field" 
+              placeholder="e.g. AI hackathons with prize pool > $3000 that are offline" 
+              value={query} 
+              onChange={e => setQuery(e.target.value)} 
+              required
+            />
           </div>
           <button type="submit" className="btn-primary" style={{ width: 'fit-content' }} disabled={loading}>
-            {loading ? 'Agent Scanning...' : 'Start Search'}
+            {loading ? 'Agent Scanning (This may take a minute)...' : 'Start Agent Search'}
           </button>
         </form>
       </div>

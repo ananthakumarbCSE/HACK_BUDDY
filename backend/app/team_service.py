@@ -13,40 +13,66 @@ def create_team(db: Session, team: TeamCreate, leader_id: int):
     db.commit()
     db.refresh(db_team)
     
-    # Add leader as a member
-    db_member = TeamMember(team_id=db_team.id, user_id=leader_id, role="Leader")
-    db.add(db_member)
-    db.commit()
+    # We no longer add the leader inherently as a TeamMember model
+    # because the leader properties exist structurally within User, and TeamMembers are strictly other participants.
     
     return db_team
 
 def get_user_teams(db: Session, user_id: int):
-    memberships = db.query(TeamMember).filter(TeamMember.user_id == user_id).all()
-    team_ids = [m.team_id for m in memberships]
-    return db.query(Team).filter(Team.id.in_(team_ids)).all()
+    # Memberships now exist as manual datastores inside Teams.
+    # Therefore, user_teams just means teams led by this User.
+    return db.query(Team).filter(Team.leader_id == user_id).all()
 
-def add_member(db: Session, team_id: int, leader_id: int, email: str, role: str = "Member"):
+def add_member_manual(db: Session, team_id: int, leader_id: int, req: "schemas.TeamMemberCreate"):
     team = db.query(Team).filter(Team.id == team_id).first()
     if not team or team.leader_id != leader_id:
         raise ValueError("Team not found or unauthorized.")
         
-    user = db.query(User).filter(User.email == email).first()
-    if not user:
-        raise ValueError("User not found by email.")
-        
-    existing_mem = db.query(TeamMember).filter(
-        TeamMember.team_id == team_id,
-        TeamMember.user_id == user.id
-    ).first()
-    
-    if existing_mem:
-        raise ValueError("User is already a member of this team.")
-        
-    new_member = TeamMember(team_id=team_id, user_id=user.id, role=role)
+    new_member = TeamMember(
+        team_id=team_id,
+        first_name=req.first_name,
+        last_name=req.last_name,
+        email=req.email,
+        mobile=req.mobile,
+        gender=req.gender,
+        organization=req.organization,
+        location=req.location,
+        role=req.role
+    )
     db.add(new_member)
     db.commit()
     db.refresh(new_member)
     return new_member
+
+def edit_member_manual(db: Session, member_id: int, leader_id: int, req: "schemas.TeamMemberUpdate"):
+    member = db.query(TeamMember).filter(TeamMember.id == member_id).first()
+    if not member:
+        raise ValueError("Member not found.")
+        
+    team = db.query(Team).filter(Team.id == member.team_id).first()
+    if not team or team.leader_id != leader_id:
+        raise ValueError("Unauthorized to edit this team's members.")
+        
+    update_data = req.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(member, key, value)
+        
+    db.commit()
+    db.refresh(member)
+    return member
+
+def delete_member_manual(db: Session, member_id: int, leader_id: int):
+    member = db.query(TeamMember).filter(TeamMember.id == member_id).first()
+    if not member:
+        raise ValueError("Member not found.")
+        
+    team = db.query(Team).filter(Team.id == member.team_id).first()
+    if not team or team.leader_id != leader_id:
+        raise ValueError("Unauthorized to delete this team's members.")
+        
+    db.delete(member)
+    db.commit()
+    return {"detail": "Member deleted successfully"}
 
 def get_team_details(db: Session, team_id: int):
     return db.query(Team).filter(Team.id == team_id).first()

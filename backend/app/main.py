@@ -11,13 +11,11 @@ app = FastAPI(title="HackBuddy API")
 # Setup CORS
 origins = [
     "http://localhost:3000",
-    "http://localhost:5173", # Vite default port
-    "*" # In production, lock this down
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # for development
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
