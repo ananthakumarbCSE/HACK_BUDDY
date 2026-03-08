@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .database import engine, Base
-from .routes import auth, hackathons, teams
+from .routes import auth, hackathons, teams, credentials, sessions
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -24,6 +24,8 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(hackathons.router)
 app.include_router(teams.router)
+app.include_router(credentials.router)
+app.include_router(sessions.router)
 
 @app.get("/")
 def read_root():

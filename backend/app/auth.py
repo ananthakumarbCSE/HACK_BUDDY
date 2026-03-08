@@ -6,6 +6,7 @@ from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from cryptography.fernet import Fernet
 from .database import get_db
 from .models import User
 from .schemas import TokenData
@@ -15,16 +16,32 @@ SECRET_KEY = os.getenv("SECRET_KEY", "09d25e094faa6ca2556c818166b7a9563ebcedbdcb
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30 * 24 * 60 # 30 days
 
+# Encryption for platform credentials
+def get_encryption_key():
+    key_str = os.getenv("ENCRYPTION_KEY")
+    if not key_str:
+        # Generate a new key if not provided
+        key_str = Fernet.generate_key().decode()
+        print("WARNING: ENCRYPTION_KEY not set. Generated new key. Store this for production:")
+        print(f"ENCRYPTION_KEY={key_str}")
+    return key_str.encode()
+
+cipher = Fernet(get_encryption_key())
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 def verify_password(plain_password, hashed_password):
-    plain_password = plain_password[:72]
     return pwd_context.verify(plain_password, hashed_password)
 
-def get_password_hash(password):
-    password = password[:72]
+def get_password_hash(password: str):
     return pwd_context.hash(password)
+
+def encrypt_password(password: str) -> str:
+    return cipher.encrypt(password.encode()).decode()
+
+def decrypt_password(encrypted_password: str) -> str:
+    return cipher.decrypt(encrypted_password.encode()).decode()
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()

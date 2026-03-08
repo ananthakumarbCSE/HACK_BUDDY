@@ -40,16 +40,34 @@ class TinyFishService:
             print(f"TinyFish Search Error: {e}")
         return results
 
-    def register_team(self, url: str, instructions: str) -> Dict[str, Any]:
+    def register_team(self, url: str, instructions: str, cookies_json: str = None) -> Dict[str, Any]:
         """
         Uses TinyFish to run automated registration.
+        
+        Args:
+            url: The registration page URL
+            instructions: The task instructions
+            cookies_json: Optional JSON string containing session cookies to set before starting
         """
         if not self.client:
             print("WARNING: TinyFish API Key missing. Simulating registration.")
             return {"status": "success", "run_id": "simulated_run_123"}
         
         try:
-            with self.client.agent.stream(url=url, goal=instructions) as stream:
+            # If cookies are provided, include instructions to set them
+            if cookies_json:
+                enhanced_instructions = f"""
+IMPORTANT: Start by setting the following session cookies in the browser context:
+{cookies_json}
+
+Then proceed with the task:
+
+{instructions}
+"""
+            else:
+                enhanced_instructions = instructions
+            
+            with self.client.agent.stream(url=url, goal=enhanced_instructions) as stream:
                 logs = []
                 final_result = None
                 for event in stream:

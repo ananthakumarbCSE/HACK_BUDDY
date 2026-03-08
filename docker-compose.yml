@@ -10,6 +10,11 @@ services:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hackbuddy -d hackbuddydb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build:
@@ -17,11 +22,13 @@ services:
     environment:
       DATABASE_URL: postgresql://hackbuddy:password123@postgres:5432/hackbuddydb
       SECRET_KEY: myverysecretkey123
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
       TINYFISH_API_KEY: ${TINYFISH_API_KEY}
     ports:
       - "8000:8000"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
   frontend:
     build:

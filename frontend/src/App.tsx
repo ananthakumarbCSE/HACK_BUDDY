@@ -4,6 +4,8 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import HackathonSearch from './pages/HackathonSearch';
 import TeamManagement from './pages/TeamManagement';
+import CredentialManagement from './pages/CredentialManagement';
+import SessionManagement from './pages/SessionManagement';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -27,6 +29,16 @@ function App() {
             <Route path="/teams" element={
               <ProtectedRoute>
                 <TeamManagement />
+              </ProtectedRoute>
+            } />
+            <Route path="/credentials" element={
+              <ProtectedRoute>
+                <CredentialManagement />
+              </ProtectedRoute>
+            } />
+            <Route path="/sessions" element={
+              <ProtectedRoute>
+                <SessionManagement />
               </ProtectedRoute>
             } />
             <Route path="/" element={<Navigate to="/dashboard" />} />

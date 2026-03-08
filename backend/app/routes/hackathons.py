@@ -8,9 +8,7 @@ from ..hackathon_service import get_hackathons, search_and_store_hackathons, reg
 router = APIRouter(prefix="/hackathons", tags=["hackathons"])
 
 PLATFORMS = [
-    "https://devpost.com/hackathons",
-    "https://www.hackerearth.com/challenges/",
-    "https://unstop.com/hackathons"
+    "https://unstop.com/competitions"
 ]
 
 @router.get("/", response_model=List[schemas.HackathonResponse])
@@ -21,14 +19,25 @@ def read_hackathons(skip: int = 0, limit: int = 100, db: Session = Depends(get_d
 def trigger_hackathon_search(req: schemas.SearchHackathonRequest, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
     try:
         results = []
-        goal = f"""Find hackathons matching this request:
+        goal = f"""
+Find hackathons on Unstop that match the following request:
 
 {req.query}
 
-Only return hackathons that match the criteria.
+Only include hackathons that match the criteria.
 
-Extract: name, domain, location, prize pool, deadline, registration link, platform.
-Return a JSON array."""
+Return ONLY the best 5 hackathons.
+
+Extract the following fields:
+- hackathon_name
+- prize_pool
+- deadline
+- location
+- domain
+- registration_link
+
+Return results as JSON array.
+"""
 
         for url in PLATFORMS:
             try:
@@ -40,6 +49,8 @@ Return a JSON array."""
 
         if not results:
             raise HTTPException(status_code=500, detail={"error": "Failed to extract hackathons or no new hackathons were found."})
+        
+        results = results[:5]
         return results
     except HTTPException:
         raise
@@ -69,6 +80,6 @@ def register_for_hackathon(
 
 @router.get("/registered", response_model=List[schemas.RegistrationResponse])
 def user_registrations(db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
-    team_ids = [t.id for t in current_user.teams_led] + [m.team_id for m in current_user.memberships]
+    team_ids = list(set([t.id for t in current_user.teams_led] + [m.team_id for m in current_user.memberships]))
     registrations = db.query(models.Registration).filter(models.Registration.team_id.in_(team_ids)).all()
     return registrations

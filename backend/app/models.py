@@ -19,6 +19,38 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     teams_led = relationship("Team", back_populates="leader")
+    memberships = relationship(
+        "TeamMember",
+        back_populates="user",
+        cascade="all, delete"
+    )
+    platform_credentials = relationship("PlatformCredential", back_populates="user", cascade="all, delete")
+    platform_sessions = relationship("PlatformSession", back_populates="user", cascade="all, delete")
+
+class PlatformCredential(Base):
+    __tablename__ = "platform_credentials"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    platform_name = Column(String, nullable=False)
+    email = Column(String, nullable=False)
+    encrypted_password = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User", back_populates="platform_credentials")
+
+class PlatformSession(Base):
+    __tablename__ = "platform_sessions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    platform_name = Column(String, nullable=False)
+    cookies_json = Column(Text, nullable=False)
+    expires_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    user = relationship("User", back_populates="platform_sessions")
 
 class Team(Base):
     __tablename__ = "teams"
@@ -37,6 +69,7 @@ class TeamMember(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     team_id = Column(Integer, ForeignKey("teams.id"))
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     first_name = Column(String, nullable=False)
     last_name = Column(String, nullable=False)
     email = Column(String, nullable=False)
@@ -48,6 +81,7 @@ class TeamMember(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     team = relationship("Team", back_populates="members")
+    user = relationship("User", back_populates="memberships")
 
 class Hackathon(Base):
     __tablename__ = "hackathons"

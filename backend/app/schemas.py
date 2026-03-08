@@ -29,6 +29,37 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     email: Optional[str] = None
 
+# Platform Credential Schemas
+class PlatformCredentialBase(BaseModel):
+    platform_name: str
+    email: str
+    password: str
+
+class PlatformCredentialCreate(PlatformCredentialBase):
+    pass
+
+class PlatformCredentialResponse(BaseModel):
+    id: int
+    platform_name: str
+    email: str
+    created_at: datetime
+    class Config:
+        from_attributes = True
+
+# Platform Session Schemas
+class PlatformSessionCreate(BaseModel):
+    platform_name: str
+    cookies_json: str
+    expires_at: Optional[datetime] = None
+
+class PlatformSessionResponse(BaseModel):
+    id: int
+    platform_name: str
+    created_at: datetime
+    updated_at: datetime
+    class Config:
+        from_attributes = True
+
 # Team Schemas
 class TeamMemberBase(BaseModel):
     first_name: str

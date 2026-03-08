@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Terminal, LogOut, Search, Users, LayoutDashboard } from 'lucide-react';
+import { Terminal, LogOut, Search, Users, LayoutDashboard, Lock, Zap } from 'lucide-react';
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -31,6 +31,12 @@ export default function Navbar() {
         </Link>
         <Link to="/teams" className="flex items-center gap-2 hover:text-primary transition-colors">
           <Users size={18} /> My Teams
+        </Link>
+        <Link to="/sessions" className="flex items-center gap-2 hover:text-primary transition-colors">
+          <Zap size={18} /> Sessions
+        </Link>
+        <Link to="/credentials" className="flex items-center gap-2 hover:text-primary transition-colors">
+          <Lock size={18} /> Credentials
         </Link>
         <button onClick={handleLogout} className="btn-outline ml-4" style={{ padding: '0.5rem 1rem' }}>
           <LogOut size={16} /> Logout
